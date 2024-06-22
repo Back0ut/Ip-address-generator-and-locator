@@ -26,18 +26,18 @@ class GenerateIp:
             
             if new_ip not in ips:
                 return new_ip
-            
-            else:
-                self.GenerateNewIp
 
     def GetGeolocation(self, ip: str) -> tuple[str, str]:
-        try:
-            response = get(f'http://ipinfo.io/{ip}/json')
-            data = response.json()
-            return data.get('city', 'Unknown'), data.get('country', 'Unknown')
+        while True:
+            try:
+                response = get(f'http://ipinfo.io/{ip}/json')
+                data = response.json()
+                break
+            
+            except Exception:
+                self.GenerateNewIp
         
-        except Exception:
-            self.GenerateNewIp
+        return data.get('city', 'Unknown'), data.get('country', 'Unknown')
 
 @app.route('/')
 def index():
