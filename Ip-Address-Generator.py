@@ -29,9 +29,11 @@ class GenerateIp:
         ]
 
         ip_int = int(''.join(f'{int(part):08b}' for part in ip.split('.')), 2)
+        
         for block_start, block_end in private_ip_blocks:
             start_int = int(''.join(f'{int(part):08b}' for part in block_start.split('.')), 2)
-            end_int = int(''.join(f'{int(part):08b}' for part in block_end.split('.')), 2)
+            end_int =   int(''.join(f'{int(part):08b}' for part in block_end.split('.')), 2)
+            
             if start_int <= ip_int <= end_int:
                 return True
         
