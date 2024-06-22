@@ -1,16 +1,17 @@
 from flask import Flask, jsonify, render_template_string
-from requests import get
+from requests import get, RequestException
 from random import randint
 
-ips = []
 app = Flask(__name__)
 
 class GenerateIp:
+    ips = []
+
     def __init__(self) -> None:
         self.ip = self.GenerateNewIp()
         self.city, self.country = self.GetGeolocation(self.ip)
         
-        ips.append(self.ip)
+        GenerateIp.ips.append(self.ip)
 
     def GenerateNewIp(self) -> str:
         while True:
@@ -24,20 +25,26 @@ class GenerateIp:
             
             new_ip = '.'.join(ip_parts)
             
-            if new_ip not in ips:
+            if new_ip not in GenerateIp.ips:
                 return new_ip
 
     def GetGeolocation(self, ip: str) -> tuple[str, str]:
         while True:
             try:
                 response = get(f'http://ipinfo.io/{ip}/json')
-                data = response.json()
-                break
+                if response.status_code == 200:
+                    data = response.json()
+                    city, country = data.get('city', 'Unknown'), data.get('country', 'Unknown')
+                    
+                    return city, country
+                
+                else:
+                    print(f"Error: Received status code {response.status_code}")
+                    ip = self.GenerateNewIp()
             
-            except Exception:
-                self.GenerateNewIp
-        
-        return data.get('city', 'Unknown'), data.get('country', 'Unknown')
+            except RequestException as exc:
+                print(f"Request failed: {exc}")
+                ip = self.GenerateNewIp()
 
 @app.route('/')
 def index():
