@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, render_template_string
-from requests import get, RequestException
+from requests import RequestException, get as requests_get
 from random import randint
 
 app = Flask(__name__)
@@ -44,7 +44,7 @@ class GenerateIp:
 
     def GetGeolocation(self, ip: str) -> tuple[str, str]:
         try:
-            response = f'http://ip-api.com/json/{ip}'
+            response = requests_get(f'http://ip-api.com/json/{ip}')
             data = response.json()
             city, country = data.get('city', 'Unknown'), data.get('country', 'Unknown')
         
@@ -54,54 +54,56 @@ class GenerateIp:
         
         return city, country
 
+html_template = """
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IP Generator</title>
+              
+    <style>
+        .button button {
+            border-radius: 12px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        .button button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Randomly Generated IP Addresses</h1>
+    <div class="button">
+        <button onclick="generateIps()">Generate IPs</button>
+    </div>
+    
+    <ul id="ip-list"></ul>
+    <script>
+        function generateIps() {
+            fetch('/generate_ips')
+                .then(response => response.json())
+                .then(data => {
+                    const ipList = document.getElementById('ip-list');
+                    ipList.innerHTML = '';
+                    data.forEach(ip => {
+                        const li = document.createElement('li');
+                        li.textContent = `${ip.ip} - ${ip.city}, ${ip.country}`;
+                        ipList.appendChild(li);
+                    });
+                });
+        }
+    </script>
+</body>
+</html>
+"""
+
 @app.route('/')
 def index():
-    return render_template_string('''
-        <!doctype html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <title>IP Generator</title>
-                                  
-            <style>
-                .button button {
-                    border-radius: 12px;
-                    background-color: #007BFF;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    cursor: pointer;
-                }
-                .button button:hover {
-                    background-color: #0056b3;
-                }
-            </style>
-        </head>
-        <body>
-            <h1>Randomly Generated IP Addresses</h1>
-            <div class="button">
-                <button onclick="generateIps()">Generate IPs</button>
-            </div>
-            
-            <ul id="ip-list"></ul>
-            <script>
-                function generateIps() {
-                    fetch('/generate_ips')
-                        .then(response => response.json())
-                        .then(data => {
-                            const ipList = document.getElementById('ip-list');
-                            ipList.innerHTML = '';
-                            data.forEach(ip => {
-                                const li = document.createElement('li');
-                                li.textContent = `${ip.ip} - ${ip.city}, ${ip.country}`;
-                                ipList.appendChild(li);
-                            });
-                        });
-                }
-            </script>
-        </body>
-        </html>
-    ''')
+    return render_template_string(html_template)
 
 @app.route('/generate_ips')
 def generate_ips() -> jsonify:
