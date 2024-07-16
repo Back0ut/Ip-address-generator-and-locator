@@ -43,7 +43,7 @@ class GenerateIp:
 
 @app.route('/')
 def index():
-    template_path = os.path.join('C:/Users/karlybarly/Desktop/Python Projects/Ip-Address-Generator-locator', 'weather_template.html')
+    template_path = os.path.join('C:/Users/ABC/Desktop/VsCode Projects/Python Projects/Ip-Address-Generator-locator', 'weather_template.html')
 
     try:
         with open(template_path, 'r') as file:
