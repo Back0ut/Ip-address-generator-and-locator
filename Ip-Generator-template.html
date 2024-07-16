@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+            
+    <title>IP Generator</title>
+</head>
+<body>
+    <h1>Randomly Generated IP Addresses</h1>
+            
+        <button onclick="generateIps()">Generate IPs</button>
+        <ul id="ip-list"></ul>
+            
+        <script>
+            function generateIps() {
+                fetch('/generate_ips')
+                    .then(response => response.json())
+                    .then(data => {
+                        const ipList = document.getElementById('ip-list');
+                        ipList.innerHTML = '';
+                        data.forEach(ip => {
+                            const li = document.createElement('li');
+                            li.textContent = `${ip.ip} - ${ip.city}, ${ip.country}`;
+                            ipList.appendChild(li);
+                        });
+                    });
+            }
+        </script>
+</body>
+</html>
