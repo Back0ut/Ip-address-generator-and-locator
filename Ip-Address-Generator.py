@@ -8,6 +8,12 @@ app = Flask(__name__)
 class GenerateIp:
     ips = []
 
+    private_ip_blocks: list = [
+        ("10.0.0.0", "10.255.255.255"),
+        ("172.16.0.0", "172.31.255.255"),
+        ("192.168.0.0", "192.168.255.255")
+    ]
+
     def __init__(self) -> None:
         self.ip = self.GenerateNewIp()
         self.city, self.country = self.GetGeolocation(self.ip)
@@ -23,15 +29,9 @@ class GenerateIp:
                 return new_ip
 
     def is_PrivateIp(self, ip: str) -> bool:
-        private_ip_blocks: list = [
-            ("10.0.0.0", "10.255.255.255"),
-            ("172.16.0.0", "172.31.255.255"),
-            ("192.168.0.0", "192.168.255.255")
-        ]
-
         ip_int = int(''.join(f'{int(part):08b}' for part in ip.split('.')), 2)
         
-        for block_start, block_end in private_ip_blocks:
+        for block_start, block_end in GenerateIp.private_ip_blocks:
             def split_ip_ToBinary(start_or_end):
                 return int(''.join(f'{int(part):08b}' for part in start_or_end.split('.')), 2)
             
@@ -53,9 +53,59 @@ class GenerateIp:
             print(f"Error fetching data for IP {ip}: {exc}")
             city, country = 'Unknown', 'Unknown'
 
-            while city == 'Unknown' and country == 'Unknown':
-                self.GenerateNewIp()
-                self.city, self.country = self.GetGeolocation(self.ip)
+            if city == 'Unknown' and country == 'Unknown':
+                GenerateIp.private_ip_blocks.append(self.ip)
+        
+        return city, countryclass GenerateIp:
+    ips = []
+
+    private_ip_blocks: list = [
+        ("10.0.0.0", "10.255.255.255"),
+        ("172.16.0.0", "172.31.255.255"),
+        ("192.168.0.0", "192.168.255.255")
+    ]
+
+    def __init__(self) -> None:
+        self.ip = self.GenerateNewIp()
+        self.city, self.country = self.GetGeolocation(self.ip)
+        
+        GenerateIp.ips.append(self.ip)
+
+    def GenerateNewIp(self) -> str:
+        while True:
+            ip_parts = [str(randint(1, 255)) for _ in range(4)]
+            new_ip = '.'.join(ip_parts)
+            
+            if new_ip not in GenerateIp.ips and not self.is_PrivateIp(new_ip):
+                return new_ip
+
+    def is_PrivateIp(self, ip: str) -> bool:
+        ip_int = int(''.join(f'{int(part):08b}' for part in ip.split('.')), 2)
+        
+        for block_start, block_end in GenerateIp.private_ip_blocks:
+            def split_ip_ToBinary(start_or_end):
+                return int(''.join(f'{int(part):08b}' for part in start_or_end.split('.')), 2)
+            
+            start_int = split_ip_ToBinary(block_start)
+            end_int = split_ip_ToBinary(block_end)
+            
+            if start_int <= ip_int <= end_int:
+                return True
+        
+        return False
+
+    def GetGeolocation(self, ip: str) -> tuple[str, str]:
+        try:
+            response = requests_get(f'http://ip-api.com/json/{ip}')
+            data = response.json()
+            city, country = data.get('city', 'Unknown'), data.get('country', 'Unknown')
+        
+        except RequestException as exc:
+            print(f"Error fetching data for IP {ip}: {exc}")
+            city, country = 'Unknown', 'Unknown'
+
+            if city == 'Unknown' and country == 'Unknown':
+                GenerateIp.private_ip_blocks.append(self.ip)
         
         return city, country
 
