@@ -105,7 +105,7 @@ class GenerateIp:
             city, country = 'Unknown', 'Unknown'
 
             if city == 'Unknown' and country == 'Unknown':
-                GenerateIp.private_ip_blocks.append(self.ip)
+                GenerateIp.private_ip_blocks.append(tuple(self.ip))
         
         return city, country
 
